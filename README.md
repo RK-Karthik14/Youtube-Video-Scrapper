@@ -23,8 +23,7 @@ This project is a Python Flask-based web application that allows users to scrape
 ### Installation
 1. Clone the repository
 ```
-    git clone
-    cd
+    git clone https://github.com/RK-Karthik14/Youtube-Video-Scrapper.git
 ```
 2. Create virtual environment
 ```
@@ -59,5 +58,6 @@ This project is a Python Flask-based web application that allows users to scrape
 
     ```
     * **Note**: Provide channel id
+    ![IMG](/images/img1.png)
 ## Demo
 A live demo is available at: 
