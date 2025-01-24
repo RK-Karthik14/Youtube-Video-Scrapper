@@ -4,6 +4,7 @@ import os
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
@@ -13,6 +14,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from dotenv import load_dotenv
+from tqdm import tqdm
 import time
 
 # Load environment variables
@@ -24,8 +26,11 @@ def scrape_and_send(email, channel_name):
     try:
         # Scraping Process
         link = f'https://www.youtube.com/@{channel_name}/videos'
-        browser = webdriver.Chrome()
-        browser.maximize_window()
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Run in headless mode
+        chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration (optional)
+        chrome_options.add_argument("--window-size=1920x1080")
+        browser = webdriver.Chrome(options=chrome_options)
         browser.get(link)
         time.sleep(10)
 
@@ -48,7 +53,7 @@ def scrape_and_send(email, channel_name):
 
         for sp in contents.find_all('ytd-rich-item-renderer'):
             title = sp.find('a', class_='yt-simple-endpoint focus-on-expand style-scope ytd-rich-grid-media').get('title')
-            video_link = 'www.youtube.com' + sp.find('a', class_='yt-simple-endpoint focus-on-expand style-scope ytd-rich-grid-media').get('href')
+            video_link = 'https://www.youtube.com' + sp.find('a', class_='yt-simple-endpoint focus-on-expand style-scope ytd-rich-grid-media').get('href')
             views = sp.find('span', class_='inline-metadata-item style-scope ytd-video-meta-block').text
             time_ago = sp.find_all('span', class_='inline-metadata-item style-scope ytd-video-meta-block')[1].text
             try:
@@ -59,13 +64,28 @@ def scrape_and_send(email, channel_name):
                 image_src = sp.find('img', class_='yt-core-image yt-core-image--fill-parent-height yt-core-image--fill-parent-width yt-core-image--content-mode-scale-aspect-fill yt-core-image--loaded').get('src').split('?')[0]
             except:
                 image_src = np.nan
-            data.append([title, video_link, views, time_ago, duration, image_src])
+            data.append([title, time_ago, duration, np.nan ,views, np.nan, image_src, video_link])
+            
+        for i in tqdm(range(len(data))):
+            video_link = data[i][7]
+            
+            browser.get(video_link)
+            time.sleep(5)
+            
+            vb_soup = BeautifulSoup(browser.page_source, 'html.parser')
+            likes_btn = vb_soup.find('like-button-view-model')
+            likes = likes_btn.find('div', class_='yt-spec-button-shape-next__button-text-content').text
+            description = ''
+            for vb_sp in vb_soup.find_all('yt-attributed-string', class_='style-scope ytd-text-inline-expander'):
+                description += vb_sp.text
+
+            data[i][3] = likes
+            data[i][5] = description
 
         # Save data to a CSV file
         filename = f"{channel_name}_videos.csv"
-        df = pd.DataFrame(data, columns=['title', 'video_link', 'views', 'time_ago', 'duration', 'image_src'])
+        df = pd.DataFrame(data, columns=['title', 'time_ago', 'duration', 'likes', 'views', 'description', 'thumbnail_src', 'video_src'])
         df.to_csv(filename, index=False)
-        browser.quit()
 
         # Send Email
         sender_email = os.getenv("EMAIL_ADDRESS")

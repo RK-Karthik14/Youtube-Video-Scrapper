@@ -6,6 +6,7 @@ This project is a Python Flask-based web application that allows users to scrape
 * Scrapes video data (title, views, duration, etc.) from a specified YouTube channel.
 * Sends the scraped data as a CSV file to the user's email.
 * Provides immediate feedback to the user about the status of the request.
+* Shows the status of the information scrapping in the console
 * Fully self-contained and deployable with no additional tools required.
 
 ## Technologies Used
@@ -15,6 +16,7 @@ This project is a Python Flask-based web application that allows users to scrape
 * **Pandas**: For processing and exporting data to CSV.
 * **dotenv**: For managing environment variables securely.
 * **SMTP**: For sending emails with attachments.
+* **TQDM**: For showing the status of the information scrape
 
 ## Setup Instructions
 ### Prerequistes
@@ -59,5 +61,3 @@ This project is a Python Flask-based web application that allows users to scrape
     ```
     * **Note**: Provide channel id
     ![IMG](/images/img1.png)
-## Demo
-A live demo is available at: 
